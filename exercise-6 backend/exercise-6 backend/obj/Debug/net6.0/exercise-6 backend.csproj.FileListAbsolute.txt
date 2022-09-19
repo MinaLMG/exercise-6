@@ -1,0 +1,27 @@
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\bin\Debug\net6.0\appsettings.Development.json
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\bin\Debug\net6.0\appsettings.json
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\bin\Debug\net6.0\exercise-6 backend.exe
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\bin\Debug\net6.0\exercise-6 backend.deps.json
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\bin\Debug\net6.0\exercise-6 backend.runtimeconfig.json
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\bin\Debug\net6.0\exercise-6 backend.dll
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\bin\Debug\net6.0\exercise-6 backend.pdb
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\bin\Debug\net6.0\Microsoft.OpenApi.dll
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\bin\Debug\net6.0\Swashbuckle.AspNetCore.Swagger.dll
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\bin\Debug\net6.0\Swashbuckle.AspNetCore.SwaggerGen.dll
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\bin\Debug\net6.0\Swashbuckle.AspNetCore.SwaggerUI.dll
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\obj\Debug\net6.0\exercise-6 backend.csproj.AssemblyReference.cache
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\obj\Debug\net6.0\exercise-6 backend.GeneratedMSBuildEditorConfig.editorconfig
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\obj\Debug\net6.0\exercise-6 backend.AssemblyInfoInputs.cache
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\obj\Debug\net6.0\exercise-6 backend.AssemblyInfo.cs
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\obj\Debug\net6.0\exercise-6 backend.csproj.CoreCompileInputs.cache
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\obj\Debug\net6.0\exercise-6 backend.MvcApplicationPartsAssemblyInfo.cs
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\obj\Debug\net6.0\exercise-6 backend.MvcApplicationPartsAssemblyInfo.cache
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\obj\Debug\net6.0\staticwebassets.build.json
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\obj\Debug\net6.0\staticwebassets.development.json
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\obj\Debug\net6.0\scopedcss\bundle\exercise-6 backend.styles.css
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\obj\Debug\net6.0\exercise-6 backend.csproj.CopyComplete
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\obj\Debug\net6.0\exercise-6 backend.dll
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\obj\Debug\net6.0\refint\exercise-6 backend.dll
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\obj\Debug\net6.0\exercise-6 backend.pdb
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\obj\Debug\net6.0\exercise-6 backend.genruntimeconfig.cache
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\obj\Debug\net6.0\ref\exercise-6 backend.dll
