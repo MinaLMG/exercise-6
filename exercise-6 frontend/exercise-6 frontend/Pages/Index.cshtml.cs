@@ -1,10 +1,10 @@
-﻿using exercise_4_frontend.Models;
+﻿using exercise_6_frontend.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Text;
 using System.Text.Json;
 
-namespace exercise_4_frontend.Pages
+namespace exercise_6_frontend.Pages
 {
     public class IndexModel : PageModel
     {

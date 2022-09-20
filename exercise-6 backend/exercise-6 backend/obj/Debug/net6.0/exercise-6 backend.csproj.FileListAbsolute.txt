@@ -25,3 +25,17 @@ E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\obj\Debug\
 E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\obj\Debug\net6.0\exercise-6 backend.pdb
 E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\obj\Debug\net6.0\exercise-6 backend.genruntimeconfig.cache
 E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\obj\Debug\net6.0\ref\exercise-6 backend.dll
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\bin\Debug\net6.0\Token.Development.json
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\bin\Debug\net6.0\Token.json
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\bin\Debug\net6.0\Microsoft.IdentityModel.Abstractions.dll
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\bin\Debug\net6.0\Microsoft.IdentityModel.JsonWebTokens.dll
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\bin\Debug\net6.0\Microsoft.IdentityModel.Logging.dll
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\bin\Debug\net6.0\Microsoft.IdentityModel.Tokens.dll
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\bin\Debug\net6.0\System.IdentityModel.Tokens.Jwt.dll
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\bin\Debug\net6.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\bin\Debug\net6.0\Microsoft.IdentityModel.Protocols.dll
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\bin\Debug\net6.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\bin\Debug\net6.0\Microsoft.Extensions.DependencyModel.dll
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\bin\Debug\net6.0\Scrutor.dll
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\bin\Debug\net6.0\Swashbuckle.AspNetCore.Filters.dll
+E:\Course\asp.net\C#\exercise-6\exercise-6 backend\exercise-6 backend\bin\Debug\net6.0\Swashbuckle.AspNetCore.Filters.Abstractions.dll

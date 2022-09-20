@@ -1,4 +1,4 @@
-﻿namespace exercise_4_frontend.Models
+﻿namespace exercise_6_frontend.Models
 {
     public class Category
     {

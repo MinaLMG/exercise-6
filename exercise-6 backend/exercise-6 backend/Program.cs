@@ -3,6 +3,14 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
+using exercise_6_backend.Models;
+using System.Security.Cryptography;
+using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Swashbuckle.AspNetCore.Filters;
 
 var builder = WebApplication.CreateBuilder();
 builder.Services.AddCors(options =>
@@ -18,7 +26,34 @@ builder.Services.AddCors(options =>
         });
 });
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("oauth2", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Description = "Standard Authorization header",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Name="Authorization",
+        Type=Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey
+    })  ;
+    options.OperationFilter<SecurityRequirementsOperationFilter>();
+});
+IConfiguration config = new ConfigurationBuilder()
+            .AddJsonFile("Token.json")
+            .AddEnvironmentVariables()
+            .Build();
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey=true,
+        IssuerSigningKey=new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(
+            config.GetRequiredSection("Token").Get<string>())
+            ),
+        ValidateIssuer=false,
+        ValidateAudience=false
+    };
+});
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 app.UseSwagger();
@@ -29,21 +64,28 @@ app.UseSwaggerUI(options =>
     options.RoutePrefix = String.Empty;
 });
 app.UseCors();
-
+app.UseAuthentication();
+app.UseAuthorization();
 Data data = new Data(app);
 Pages pages = new Pages(data);
 pages.CategoryPages(app);
 pages.RecipePages(app);
+pages.RegisterPages(app);
 app.Run();
 
 public class Data
 {
+    private IConfiguration configuration;
+
     public List<Category> Categories { get; set; } = new();
     public List<Recipe> Recipes { get; set; } = new();
+    public List<User> Users { get; set; } = new();
+    public List<UserDTO> UserDTOs { get; set; } = new();
     public Dictionary<string, Guid> CategoriesMap { get; set; }
     public Dictionary<Guid, string> CategoriesNamesMap { get; set; }
     public string RecipesLoc { get; set; }
     public string CategoriesLoc { get; set; }
+    public string UsersLoc { get; set; }
     public JsonSerializerOptions Options { get; set; }
 
     public void WriteInFolder(string text, string path)
@@ -53,7 +95,41 @@ public class Data
             writer.WriteLine(text);
         }
     }
+    public void CreatePasswordHash(string password, out byte[] PasswordSalt, out byte[] PasswordHash)
+    {
+        using (var hmac = new HMACSHA512())
+        {
+            PasswordSalt = hmac.Key;
+            PasswordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
 
+        }
+    }
+    public bool VerifyPasswordHash(string password, byte[] PasswordSalt, byte[] PasswordHash)
+    {
+        using (var hmac = new HMACSHA512(PasswordSalt))
+        {
+            var hash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+            return hash.SequenceEqual(PasswordHash);
+        }
+    }
+
+    public string CreateToken(User user)
+    {
+        List<Claim> claims = new List<Claim>()
+        {
+            new Claim(ClaimTypes.Name,user.UserName)
+        };
+        var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(
+            configuration.GetRequiredSection("Token").Get<string>())
+            );
+        var cred = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+        var token = new JwtSecurityToken(
+            claims: claims,
+            expires: DateTime.Now.AddDays(1),
+            signingCredentials: cred);
+        var jwt = new JwtSecurityTokenHandler().WriteToken(token);
+        return jwt;
+    }
     public Data(WebApplication app)
     {
         this.Options = new JsonSerializerOptions { WriteIndented = true };
@@ -87,6 +163,24 @@ public class Data
         }
         string recipesString = File.ReadAllText(this.RecipesLoc);
         this.Recipes = JsonSerializer.Deserialize<List<Recipe>>(recipesString);
+        /******/
+
+        if (app.Environment.IsDevelopment())
+        {
+            this.UsersLoc = $@"{mainPath}\..\users.json";
+        }
+        else
+        {
+            this.UsersLoc = $@"{mainPath}\users.json";
+        }
+        string usersString = File.ReadAllText(this.UsersLoc);
+        this.Users = JsonSerializer.Deserialize<List<User>>(usersString);
+        // Build a config object, using env vars and JSON providers.
+        IConfiguration config = new ConfigurationBuilder()
+            .AddJsonFile("Token.json")
+            .AddEnvironmentVariables()
+            .Build();
+        this.configuration = config;
     }
     public Category AddCategory(Category to_add)
     {
@@ -145,6 +239,31 @@ public class Data
     {
         this.Recipes.Add(to_add);
         this.WriteInFolder(JsonSerializer.Serialize(this.Recipes, this.Options), this.RecipesLoc);
+    }
+    public User RegisterUser(UserDTO user)
+    {
+        CreatePasswordHash(user.Password, out byte[] passwordSalt, out byte[] passwordHash);
+        User response = new();
+        response.UserName = user.UserName;
+        response.PasswordHash = passwordHash;
+        response.PasswordSalt = passwordSalt;
+        this.Users.Add(response);
+        this.WriteInFolder(JsonSerializer.Serialize(this.Users, this.Options), this.UsersLoc);
+        return response;
+    }
+    public User LoginUser(UserDTO user, out bool r)
+    {
+        try
+        {
+            User u = Users.Single(u => u.UserName == user.UserName);
+            r = VerifyPasswordHash(user.Password, u.PasswordSalt, u.PasswordHash);
+            return u;
+        }
+        catch
+        {
+            r = false;
+            return null;
+        }
     }
 
 }
@@ -252,6 +371,7 @@ public class Pages
         return Results.Json(toDelete);
     }
 
+    //[HttpPost,Authorize]
     public IResult CreateRecipe([FromBody] Recipe r)
     {
         return CheckRecipe(r, "add");
@@ -260,12 +380,28 @@ public class Pages
     public IResult EditRecipe(Guid id, [FromBody] Recipe r)
     {
         return CheckRecipe(r, "edit", id);
-
     }
+    [HttpDelete, Authorize]
     public IResult DeleteRecipe(Guid id)
     {
         Recipe toDelete = Data.DeleteRecipe(id);
         return Results.Json(toDelete);
+    }
+    public IResult RegisterUser([FromBody] UserDTO u)
+    {
+        User user = Data.RegisterUser(u);
+        return Results.Json(user);
+    }
+    public IResult LoginUser([FromBody] UserDTO u)
+    {
+        User user = Data.LoginUser(u, out bool r);
+        if (user == null)
+            return Results.NotFound("no user with this username exists");
+        if (!r)
+        {
+            return Results.BadRequest("username and password don't match ");
+        }
+        return Results.Json(Data.CreateToken(user));
     }
     public void CategoryPages(IEndpointRouteBuilder endpoints)
     {
@@ -283,20 +419,11 @@ public class Pages
         endpoints.MapDelete("/recipes/{id}", DeleteRecipe);
 
     }
+    public void RegisterPages(IEndpointRouteBuilder endpoints)
+    {
+        endpoints.MapPost("/register", RegisterUser);
+        endpoints.MapPost("/login", LoginUser);
+    }
 
     public Pages(Data data) { this.Data = data; }
-}
-public class Category
-{
-    public string Name { get; set; }
-    public Guid ID { get; set; }
-}
-public class Recipe
-{
-    public string Title { get; set; }
-    public List<string> Ingredients { get; set; } = new();
-    public List<string> Instructions { get; set; } = new();
-    public List<Guid> Categories { get; set; } = new();
-    public Guid ID { get; set; }
-
 }
