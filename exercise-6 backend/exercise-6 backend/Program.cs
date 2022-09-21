@@ -11,6 +11,7 @@ using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Swashbuckle.AspNetCore.Filters;
+using exercise_6_backend.Services.UserServices;
 
 var builder = WebApplication.CreateBuilder();
 builder.Services.AddCors(options =>
@@ -54,6 +55,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
     };
 });
 builder.Services.AddAuthorization();
+builder.Services.AddScoped<IUserInterface, UserService>();
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 app.UseSwagger();
@@ -129,6 +132,25 @@ public class Data
             signingCredentials: cred);
         var jwt = new JwtSecurityTokenHandler().WriteToken(token);
         return jwt;
+    }
+    public RefreshToken GenerateRefreshToken()
+    {
+        var refershToken = new RefreshToken()
+        {
+            Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
+            ExpiresAt = DateTime.Now.AddDays(7),
+            CreatedAt = DateTime.Now
+        };
+        return refershToken;
+    }
+    public CookieOptions SetRefreshToken(RefreshToken refreshToken)
+    {
+        var cookie = new CookieOptions
+        {
+            HttpOnly = true,
+            Expires = DateTime.Now.AddDays(7),
+        }; 
+        return cookie;
     }
     public Data(WebApplication app)
     {
@@ -251,12 +273,16 @@ public class Data
         this.WriteInFolder(JsonSerializer.Serialize(this.Users, this.Options), this.UsersLoc);
         return response;
     }
-    public User LoginUser(UserDTO user, out bool r)
+    public User LoginUser(UserDTO user,RefreshToken refreshToken, out bool r)
     {
         try
         {
             User u = Users.Single(u => u.UserName == user.UserName);
             r = VerifyPasswordHash(user.Password, u.PasswordSalt, u.PasswordHash);
+            u.TokenCreatedAt = refreshToken.CreatedAt;
+            u.TokenExpiresAt = refreshToken.ExpiresAt;
+            u.RefreshToken = refreshToken.Token;
+            this.WriteInFolder(JsonSerializer.Serialize(this.Users, this.Options), this.UsersLoc);
             return u;
         }
         catch
@@ -371,7 +397,7 @@ public class Pages
         return Results.Json(toDelete);
     }
 
-    //[HttpPost,Authorize]
+    //[HttpPost,Authorize] 
     public IResult CreateRecipe([FromBody] Recipe r)
     {
         return CheckRecipe(r, "add");
@@ -392,16 +418,20 @@ public class Pages
         User user = Data.RegisterUser(u);
         return Results.Json(user);
     }
-    public IResult LoginUser([FromBody] UserDTO u)
+    public IResult LoginUser([FromBody] UserDTO u,HttpResponse response)
     {
-        User user = Data.LoginUser(u, out bool r);
+        RefreshToken refreshToken = Data.GenerateRefreshToken();
+        CookieOptions cookie = Data.SetRefreshToken(refreshToken);
+        User user = Data.LoginUser(u,refreshToken, out bool r);
         if (user == null)
             return Results.NotFound("no user with this username exists");
         if (!r)
         {
             return Results.BadRequest("username and password don't match ");
         }
-        return Results.Json(Data.CreateToken(user));
+        string token = Data.CreateToken(user);
+        response.Cookies.Append("refreshToken", refreshToken.Token, cookie);
+        return Results.Json(token);
     }
     public void CategoryPages(IEndpointRouteBuilder endpoints)
     {

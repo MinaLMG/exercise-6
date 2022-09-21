@@ -2,6 +2,9 @@
   {
     "UserName": "string",
     "PasswordHash": "1Uf4PcQhGOmP9lXGKX9YBpiCbITgriNabyaG5jCrGNmAm9aUAfeqqQgqluqSooYFp8n2do6VVn0LU+XEVfu99A==",
-    "PasswordSalt": "zwxa/M11eOgU7oznjMXAlSOWxWwp/ybm1VIkdHRBAxIxYgnghGxe0hdzxEOk2kYhpK18IC8Ls1wIYZI9xUwNibuxBbXemV52tYqavRwztRueL46gEVrTkkeVWoCdxVja+5kgVl3znZ5mTx6juFgAN3oXBV8kYqpp+mWpTtbQFqo="
+    "PasswordSalt": "zwxa/M11eOgU7oznjMXAlSOWxWwp/ybm1VIkdHRBAxIxYgnghGxe0hdzxEOk2kYhpK18IC8Ls1wIYZI9xUwNibuxBbXemV52tYqavRwztRueL46gEVrTkkeVWoCdxVja+5kgVl3znZ5mTx6juFgAN3oXBV8kYqpp+mWpTtbQFqo=",
+    "RefreshToken": "ERdTixiSvmhMVMg2OqpfxpRtOAM48ByTPGT3Mii6xEf/KLb9d\u002BGaTBXRVsRO4pplXI5iIVaqI4JcmSuD5RW\u002B0w==",
+    "TokenCreatedAt": "2022-09-21T02:06:05.4120915+02:00",
+    "TokenExpiresAt": "2022-09-28T02:06:05.4120877+02:00"
   }
 ]
