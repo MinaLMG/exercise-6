@@ -33,9 +33,9 @@ builder.Services.AddSwaggerGen(options =>
     {
         Description = "Standard Authorization header",
         In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Name="Authorization",
-        Type=Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey
-    })  ;
+        Name = "Authorization",
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey
+    });
     options.OperationFilter<SecurityRequirementsOperationFilter>();
 });
 IConfiguration config = new ConfigurationBuilder()
@@ -46,12 +46,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 {
     options.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidateIssuerSigningKey=true,
-        IssuerSigningKey=new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(
             config.GetRequiredSection("Token").Get<string>())
             ),
-        ValidateIssuer=false,
-        ValidateAudience=false
+        ValidateIssuer = false,
+        ValidateAudience = false
     };
 });
 builder.Services.AddAuthorization();
@@ -143,13 +143,26 @@ public class Data
         };
         return refershToken;
     }
+    public User RefreshToken(string refreshToken)
+    {
+        try
+        {
+            User user = Users.Single(u => u.RefreshToken == refreshToken);
+            return user;
+        }
+        catch
+        {
+            return null;
+        }
+
+    }
     public CookieOptions SetRefreshToken(RefreshToken refreshToken)
     {
         var cookie = new CookieOptions
         {
             HttpOnly = true,
             Expires = DateTime.Now.AddDays(7),
-        }; 
+        };
         return cookie;
     }
     public Data(WebApplication app)
@@ -273,7 +286,7 @@ public class Data
         this.WriteInFolder(JsonSerializer.Serialize(this.Users, this.Options), this.UsersLoc);
         return response;
     }
-    public User LoginUser(UserDTO user,RefreshToken refreshToken, out bool r)
+    public User LoginUser(UserDTO user, RefreshToken refreshToken, out bool r)
     {
         try
         {
@@ -283,6 +296,24 @@ public class Data
             u.TokenExpiresAt = refreshToken.ExpiresAt;
             u.RefreshToken = refreshToken.Token;
             this.WriteInFolder(JsonSerializer.Serialize(this.Users, this.Options), this.UsersLoc);
+            return u;
+        }
+        catch
+        {
+            r = false;
+            return null;
+        }
+    }
+    public User RefreshUserToken(string userName, RefreshToken refreshToken, out bool r)
+    {
+        try
+        {
+            User u = Users.Single(u => u.UserName == userName);
+            u.TokenCreatedAt = refreshToken.CreatedAt;
+            u.TokenExpiresAt = refreshToken.ExpiresAt;
+            u.RefreshToken = refreshToken.Token;
+            this.WriteInFolder(JsonSerializer.Serialize(this.Users, this.Options), this.UsersLoc);
+            r = true;
             return u;
         }
         catch
@@ -418,11 +449,11 @@ public class Pages
         User user = Data.RegisterUser(u);
         return Results.Json(user);
     }
-    public IResult LoginUser([FromBody] UserDTO u,HttpResponse response)
+    public IResult LoginUser([FromBody] UserDTO u, HttpResponse response)
     {
         RefreshToken refreshToken = Data.GenerateRefreshToken();
         CookieOptions cookie = Data.SetRefreshToken(refreshToken);
-        User user = Data.LoginUser(u,refreshToken, out bool r);
+        User user = Data.LoginUser(u, refreshToken, out bool r);
         if (user == null)
             return Results.NotFound("no user with this username exists");
         if (!r)
@@ -431,6 +462,23 @@ public class Pages
         }
         string token = Data.CreateToken(user);
         response.Cookies.Append("refreshToken", refreshToken.Token, cookie);
+        return Results.Json(token);
+    }
+    public async Task<IResult> RefreshToken(HttpRequest httpRequest)
+    {
+        var refreshToken = httpRequest.Cookies["refreshToken"];
+        if (refreshToken == null)
+            return Results.BadRequest("No refresh token is sent!");
+        User user = Data.RefreshToken(refreshToken);
+        if (user==null)
+            return Results.BadRequest("refresh token doesn't exist!");        
+        if (user.TokenExpiresAt > DateTime.Now) 
+            return Results.BadRequest("this refresh token has expired !");
+
+        RefreshToken newRefreshToken = Data.GenerateRefreshToken();
+        CookieOptions cookie = Data.SetRefreshToken(newRefreshToken);
+        User u = Data.RefreshUserToken(user.UserName, newRefreshToken, out bool r);
+        string token = Data.CreateToken(u);
         return Results.Json(token);
     }
     public void CategoryPages(IEndpointRouteBuilder endpoints)
@@ -453,6 +501,7 @@ public class Pages
     {
         endpoints.MapPost("/register", RegisterUser);
         endpoints.MapPost("/login", LoginUser);
+        endpoints.MapPost("/refresh-token", RefreshToken);
     }
 
     public Pages(Data data) { this.Data = data; }
