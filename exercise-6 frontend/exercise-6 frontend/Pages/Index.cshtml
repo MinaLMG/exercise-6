@@ -4,10 +4,74 @@
 	ViewData["Title"] = "Home page";
 	var x = "";
 }
-@*
-@**** home page *****@
-<div class="page-body" x-show="page==`home`" x-transition:enter.duration.300ms
+<div class="page-body" x-transition:enter.duration.300ms
 	 x-transition:leave.duration.0ms>
+	<div class="index-body-auth">
+		<div class="log" x-data="{type:'in'}">
+			<form class="needs-validation" novalidate x-show="type=='in'">
+				<div class="form-floating mb-3">
+					<input type="text" class="form-control" id="user-name-login" placeholder="username">
+					<label for="user-name-login">User Name</label>
+				</div>
+				<div class="form-floating">
+					<input type="password" class="form-control" id="password-login" placeholder="Password">
+					<label for="password-login">Password</label>
+				</div>
+				<div class="form-check show-password" x-on:click="handlePasswordsLogin">
+					<input class="form-check-input" type="checkbox" value="" id="show-password-login" x-on:click="handlePasswordLogin">
+					<label class="form-check-label" for="show-password-login">
+						Show password
+					</label>
+				</div>
+				<div class="info">
+					you don't have an account ?
+					<a x-on:click="type=`up`"> sign up</a>
+				</div>
+				<div class="actions">
+					<button type="button" class="btn btn-primary" x-on:click="logIn();">sign in</button>
+				</div>
+			</form>
+			<form class="needs-validation" novalidate x-show="type=='up'">
+				<div class="form-floating mb-3">
+					<input type="text" class="form-control" id="user-name-signup" placeholder="username">
+					<label for="user-name-signup">User Name</label>
+				</div>
+
+				<div class="form-floating mb-3">
+					<input type="password" class="form-control" id="password-signup" placeholder="Password">
+					<label for="password-signup">Password</label>
+				</div>
+
+				<div class="form-floating">
+					<input type="password" class="form-control" id="confirm-password-signup" placeholder="Confirm Password">
+					<label for="confirm-password-signup">Confirm Password</label>
+				</div>
+
+
+				<div class="form-check show-password">
+					<input class="form-check-input" type="checkbox" value="" id="show-password-signup" x-on:click="handlePasswordsSignup">
+					<label class="form-check-label " for="show-password-signup">
+						Show passwords
+					</label>
+				</div>
+
+				<div class="info">
+					you already have an account ?
+					<a x-on:click="type=`in`"> log in</a>
+				</div>
+
+				<div class="actions">
+					<button type="button" class="btn btn-primary" x-on:click="type = await signUp();">sign up</button>
+				</div>
+			</form>
+
+		</div>
+	</div>
+</div>
+@**** home page *****@
+<div class="page-body" x-show="page==`home`&&authenticated" x-transition:enter.duration.300ms
+	 x-transition:leave.duration.0ms
+	 @*x-init="categoriesList = await (await fetch('@(@Model.Configuration["BaseUrl"]+"categories")')).json();recipes = await (await fetch('@(@Model.Configuration["BaseUrl"]+"recipes")')).json();categoriesNamesMap=mapNames(categoriesList)"*@>
 	<div class="index-body">
 		<div class="card ">
 			<img src="~/Images/categories2.jpg" class="card-img-top" alt="...">
@@ -28,7 +92,7 @@
 	</div>
 </div>
 @**** categories page *****@
-<div class="page-body categories" x-show="page==`categories`" x-transition:enter.duration.300ms
+<div class="page-body categories" x-show="page==`categories`&&authenticated" x-transition:enter.duration.300ms
 	 x-transition:leave.duration.0ms>
 	<div class="page-body-elements">
 		<h1> Categories</h1>
@@ -132,7 +196,7 @@
 	</div>
 </div>
 @**** recipes page *****@
-<div class="modals" x-show="page==`recipes`" x-transition:enter.duration.300ms
+<div class="modals" x-show="page==`recipes`&&authenticated" x-transition:enter.duration.300ms
 	 x-transition:leave.duration.0ms>
 	<!-- Adding Modal -->
 	<div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -333,7 +397,7 @@
 	</template>
 </div>
 @*recipes page*@
-<div class="page-body recipes" x-show="page==`recipes`" x-transition:enter.duration.300ms
+<div class="page-body recipes" x-show="page==`recipes`&&authenticated" x-transition:enter.duration.300ms
 	 x-transition:leave.duration.0ms>
 	<div class="page-body-elements">
 		<div class="recipes-header-container">
@@ -384,11 +448,17 @@
 			let name = document.getElementById("name").value.trim();
 			try {
 				await postData('@(Model.Configuration["BaseUrl"] + "categories")', { name: name })
-					.then((data) => {
-						categories.push(data);
-						map[data.id] = data.name;
-						successAlert("your category has been added successfully")
-						document.getElementById("name").value = "";
+					.then(async (data) => {
+						if (data.status == 200) {
+							data = await data.json()
+							categories.push(data);
+							map[data.id] = data.name;
+							successAlert("your category has been added successfully")
+							document.getElementById("name").value = "";
+						} else {
+							data = await data.json()
+							failureAlert(data);
+						}
 					});
 			} catch (err) {
 				failureAlert("something went wrong with your request .. check your data and try again");
@@ -397,14 +467,14 @@
 	}
 	async function deleteCategory(categories, map, id, index, recipesList) {
 		try {
-            data = await deleteData('@(Model.Configuration["BaseUrl"] + "categories/" )' + id);
+			data = await deleteData('@(Model.Configuration["BaseUrl"] + "categories/" )' + id);
 			categories.splice(index, 1); // 2nd parameter means remove one item only
 			delete map[data.id];
 			successAlert("the category has been deleted successfully");
 			$('#deleteModal' + id).modal('hide');
 			let x = await (await fetch('@(@Model.Configuration["BaseUrl"]+"recipes")')).json();
-            for (let i = 0; i < x.length;i++){
-                recipesList[i] = x[i];
+			for (let i = 0; i < x.length; i++) {
+				recipesList[i] = x[i];
 			}
 		} catch (err) {
 			failureAlert("something went wrong with your request .. you can retry after some seconds");
@@ -571,7 +641,7 @@
 			referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
 			body: JSON.stringify(data) // body data type must match "Content-Type" header
 		});
-		return response.json(); // parses JSON response into native JavaScript objects
+		return response; // parses JSON response into native JavaScript objects
 	}
 	async function deleteData(url = '', data = {}) {
 		// Default options are marked with *
@@ -608,4 +678,93 @@
 		return response.json(); // parses JSON response into native JavaScript objects
 	}
 
+</script>
+<script>
+	function handlePasswordsSignup(e) {
+		if (document.getElementById("show-password-signup").checked) {
+			document.getElementById("password-signup").type = "text";
+			document.getElementById("confirm-password-signup").type = "text";
+		} else {
+
+			document.getElementById("password-signup").type = "password";
+			document.getElementById("confirm-password-signup").type = "password";
+		}
+	}
+	async function signUp() {
+		if ($("#user-name-signup").val().trim() == "") {
+			swal.fire({ title: "UserName", text: "Please enter your user name .. it can't be empty!", "icon": "info" });
+			return "up";
+		}
+		else if ($("#password-signup").val().trim() == "") {
+			swal.fire({ title: "Password", text: "Please enter your password .. it can't be empty!", "icon": "info" });
+			return "up";
+
+		}
+		else if ($("#confirm-password-signup").val().trim() == "") {
+			swal.fire({ title: "Confirmed password", text: "confirm enter your password .. it can't be empty!", "icon": "info" });
+			return "up";
+
+		}
+		else if ($("#password-signup").val() != $("#confirm-password-signup").val()) {
+			swal.fire({ title: "Passwords", text: "please make sure you enter matched passwords!", "icon": "info" });
+			return "up";
+		}
+		else {
+			let name = document.getElementById("user-name-signup").value;
+			let password = document.getElementById("password-signup").value;
+			try {
+				await postData('@(Model.Configuration["BaseUrl"] + "register")', { UserName: name, Password: password })
+					.then((data) => {
+						successAlert("your account has been registered successfully")
+						document.getElementById("user-name-signup").value = "";
+						document.getElementById("password-signup").value = "";
+						document.getElementById("confirm-password-signup").value = "";
+						//return "in";
+					});
+				return "in";
+			} catch (err) {
+				failureAlert("something went wrong with your request .. check your data and try again");
+				return "up";
+			}
+		}
+	}
+	function handlePasswordLogin(e) {
+		if (document.getElementById("show-password-login").checked) {
+			document.getElementById("password-login").type = "text";
+		} else {
+
+			document.getElementById("password-login").type = "password";
+		}
+	}
+	async function logIn() {
+		if ($("#user-name-login").val().trim() == "") {
+			swal.fire({ title: "UserName", text: "Please enter your user name .. it can't be empty!", "icon": "info" });
+		}
+		else if ($("#password-login").val().trim() == "") {
+			swal.fire({ title: "Password", text: "Please enter your password .. it can't be empty!", "icon": "info" });
+
+		}
+		else {
+			let name = document.getElementById("user-name-login").value;
+			let password = document.getElementById("password-login").value;
+			try {
+				await postData('@(Model.Configuration["BaseUrl"] + "login")', { UserName: name, Password: password })
+					.then(async (data) => {
+						if (data.status == 200) {
+							data = await data.json();
+							successAlert("successfull login")
+							document.getElementById("user-name-login").value = "";
+							document.getElementById("password-login").value = "";
+							localStorage["access-token"] = data;
+						}
+						else {
+							data = await data.json();
+							failureAlert(data);
+						}
+					})
+			} catch (err) {
+				failureAlert("something went wrong with your request .. check your data and try again");
+			}
+		}
+	}
 </script>

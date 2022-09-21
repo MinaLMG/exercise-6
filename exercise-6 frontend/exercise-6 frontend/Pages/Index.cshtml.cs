@@ -43,7 +43,7 @@ namespace exercise_6_frontend.Pages
 
         public async Task OnGet()
         {
-            await ListItems();
+            //await ListItems();
         }
 
         public async Task ListItems()

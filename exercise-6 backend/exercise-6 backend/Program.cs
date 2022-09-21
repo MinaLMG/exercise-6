@@ -412,15 +412,17 @@ public class Pages
         return Results.Ok();
 
     }
+    [Authorize]
     public IResult CreateCategory([FromBody] Category c)
     {
         return CheckCategory(c, "add");
     }
-
+    [Authorize]
     public IResult EditCategory(Guid id, [FromBody] Category c)
     {
         return CheckCategory(c, "edit", id);
     }
+    [Authorize]
     public IResult DeleteCategory(Guid id)
     {
         Category toDelete = Data.DeleteCategory(id);
@@ -429,11 +431,12 @@ public class Pages
     }
 
     //[HttpPost,Authorize] 
+    [Authorize]
     public IResult CreateRecipe([FromBody] Recipe r)
     {
         return CheckRecipe(r, "add");
     }
-
+    [Authorize]
     public IResult EditRecipe(Guid id, [FromBody] Recipe r)
     {
         return CheckRecipe(r, "edit", id);
@@ -444,10 +447,10 @@ public class Pages
         Recipe toDelete = Data.DeleteRecipe(id);
         return Results.Json(toDelete);
     }
-    public IResult RegisterUser([FromBody] UserDTO u)
+    public IResult RegisterUser([FromBody] UserDTO u, HttpContext httpContext)
     {
         User user = Data.RegisterUser(u);
-        return Results.Json(user);
+        return Results.Ok("");
     }
     public IResult LoginUser([FromBody] UserDTO u, HttpResponse response)
     {
@@ -464,26 +467,27 @@ public class Pages
         response.Cookies.Append("refreshToken", refreshToken.Token, cookie);
         return Results.Json(token);
     }
-    public async Task<IResult> RefreshToken(HttpRequest httpRequest)
+    public async Task<IResult> RefreshToken(HttpRequest httpRequest,HttpResponse httpResponse)
     {
         var refreshToken = httpRequest.Cookies["refreshToken"];
         if (refreshToken == null)
             return Results.BadRequest("No refresh token is sent!");
         User user = Data.RefreshToken(refreshToken);
-        if (user==null)
-            return Results.BadRequest("refresh token doesn't exist!");        
-        if (user.TokenExpiresAt > DateTime.Now) 
+        if (user == null)
+            return Results.BadRequest("refresh token doesn't exist!");
+        if (user.TokenExpiresAt > DateTime.Now)
             return Results.BadRequest("this refresh token has expired !");
 
         RefreshToken newRefreshToken = Data.GenerateRefreshToken();
         CookieOptions cookie = Data.SetRefreshToken(newRefreshToken);
         User u = Data.RefreshUserToken(user.UserName, newRefreshToken, out bool r);
         string token = Data.CreateToken(u);
+        httpResponse.Cookies.Append("refreshToken", newRefreshToken.Token, cookie);
         return Results.Json(token);
     }
     public void CategoryPages(IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapGet("/categories", () => Results.Json(Data.Categories));
+        endpoints.MapGet("/categories",() => Results.Json(Data.Categories));
         endpoints.MapPost("/categories", CreateCategory);
         endpoints.MapPut("/categories/{id}", EditCategory);
         endpoints.MapDelete("/categories/{id}", DeleteCategory);
