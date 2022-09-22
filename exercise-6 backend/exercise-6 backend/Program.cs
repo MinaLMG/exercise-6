@@ -66,8 +66,11 @@ app.UseSwaggerUI(options =>
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
     options.RoutePrefix = String.Empty;
 });
-app.UseCors();
-app.UseAuthentication();
+app.UseCors(x => x
+    .AllowAnyMethod()
+    .AllowAnyHeader()
+    .SetIsOriginAllowed(origin => true) // allow any origin
+    .AllowCredentials()); // allow credentialsapp.UseAuthentication();
 app.UseAuthorization();
 Data data = new Data(app);
 Pages pages = new Pages(data);
@@ -475,7 +478,7 @@ public class Pages
         User user = Data.RefreshToken(refreshToken);
         if (user == null)
             return Results.BadRequest("refresh token doesn't exist!");
-        if (user.TokenExpiresAt > DateTime.Now)
+        if (user.TokenExpiresAt < DateTime.Now)
             return Results.BadRequest("this refresh token has expired !");
 
         RefreshToken newRefreshToken = Data.GenerateRefreshToken();

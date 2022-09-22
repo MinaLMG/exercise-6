@@ -5,7 +5,7 @@
 	var x = "";
 }
 <div class="page-body" x-transition:enter.duration.300ms
-	 x-transition:leave.duration.0ms>
+	 x-transition:leave.duration.0ms x-show="!authenticated">
 	<div class="index-body-auth">
 		<div class="log" x-data="{type:'in'}">
 			<form class="needs-validation" novalidate x-show="type=='in'">
@@ -632,7 +632,7 @@
 			method: 'POST', // *GET, POST, PUT, DELETE, etc.
 			mode: 'cors', // no-cors, *cors, same-origin
 			cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-			credentials: 'same-origin', // include, *same-origin, omit
+			credentials:'include', // include, *same-origin, omit
 			headers: {
 				'Content-Type': 'application/json'
 				// 'Content-Type': 'application/x-www-form-urlencoded',
@@ -649,7 +649,7 @@
 			method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
 			mode: 'cors', // no-cors, *cors, same-origin
 			cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-			credentials: 'same-origin', // include, *same-origin, omit
+			credentials:'include', // include, *same-origin, omit
 			headers: {
 				'Content-Type': 'application/json'
 				// 'Content-Type': 'application/x-www-form-urlencoded',
@@ -666,7 +666,7 @@
 			method: 'PUT', // *GET, POST, PUT, DELETE, etc.
 			mode: 'cors', // no-cors, *cors, same-origin
 			cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-			credentials: 'same-origin', // include, *same-origin, omit
+			credentials:'include', // include, *same-origin, omit
 			headers: {
 				'Content-Type': 'application/json'
 				// 'Content-Type': 'application/x-www-form-urlencoded',

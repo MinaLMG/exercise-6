@@ -111,22 +111,23 @@
 		}
 		async function checkRefreshToken() {
 			//let refresh = getCookie("refreshToken");
+            let checked = false;
 			try {
 				await postData('@(Model.Configuration["BaseUrl"] + "refresh-token")')
 					.then(async (data) => {
 						if (data.status == 200) {
 							data = await data.json();
 							localStorage["access-token"] = data;
-							return true;
+							checked=true;
 						}
 						else {
 							data = await data.json();
 						}
 					})
 			} catch (err) {
-				failureAlert("something went wrong with your request .. check your data and try again");
+				//failureAlert("something went wrong with your request .. check your data and try again");
 			}
-			return false;
+			return checked;
 		}
 	</script>
 
