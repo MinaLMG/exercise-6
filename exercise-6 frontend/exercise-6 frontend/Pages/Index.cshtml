@@ -28,7 +28,7 @@
 					<a x-on:click="type=`up`"> sign up</a>
 				</div>
 				<div class="actions">
-					<button type="button" class="btn btn-primary" x-on:click="logIn();">sign in</button>
+					<button type="button" class="btn btn-primary" x-on:click="authenticated= await logIn();">sign in</button>
 				</div>
 			</form>
 			<form class="needs-validation" novalidate x-show="type=='up'">
@@ -71,7 +71,7 @@
 @**** home page *****@
 <div class="page-body" x-show="page==`home`&&authenticated" x-transition:enter.duration.300ms
 	 x-transition:leave.duration.0ms
-	 @*x-init="categoriesList = await (await fetch('@(@Model.Configuration["BaseUrl"]+"categories")')).json();recipes = await (await fetch('@(@Model.Configuration["BaseUrl"]+"recipes")')).json();categoriesNamesMap=mapNames(categoriesList)"*@>
+	 x-init="categoriesList = await (await fetch('@(@Model.Configuration["BaseUrl"]+"categories")')).json();recipes = await (await fetch('@(@Model.Configuration["BaseUrl"]+"recipes")')).json();categoriesNamesMap=mapNames(categoriesList)">
 	<div class="index-body">
 		<div class="card ">
 			<img src="~/Images/categories2.jpg" class="card-img-top" alt="...">
@@ -632,9 +632,10 @@
 			method: 'POST', // *GET, POST, PUT, DELETE, etc.
 			mode: 'cors', // no-cors, *cors, same-origin
 			cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-			credentials:'include', // include, *same-origin, omit
+			credentials: 'include', // include, *same-origin, omit
 			headers: {
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				'authorization': `${localStorage["refereshToken"] == "" ? "" : `bearer ${localStorage["access-token"]}`}`,
 				// 'Content-Type': 'application/x-www-form-urlencoded',
 			},
 			redirect: 'follow', // manual, *follow, error
@@ -649,9 +650,10 @@
 			method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
 			mode: 'cors', // no-cors, *cors, same-origin
 			cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-			credentials:'include', // include, *same-origin, omit
+			credentials: 'include', // include, *same-origin, omit
 			headers: {
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				'authorization': `${localStorage["refereshToken"] == "" ? "" : `bearer ${localStorage["access-token"]}`}`,
 				// 'Content-Type': 'application/x-www-form-urlencoded',
 			},
 			redirect: 'follow', // manual, *follow, error
@@ -666,9 +668,10 @@
 			method: 'PUT', // *GET, POST, PUT, DELETE, etc.
 			mode: 'cors', // no-cors, *cors, same-origin
 			cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-			credentials:'include', // include, *same-origin, omit
+			credentials: 'include', // include, *same-origin, omit
 			headers: {
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				'authorization': `${localStorage["refereshToken"] == "" ? "" : `bearer ${localStorage["access-token"]}`}`,
 				// 'Content-Type': 'application/x-www-form-urlencoded',
 			},
 			redirect: 'follow', // manual, *follow, error
@@ -737,6 +740,7 @@
 		}
 	}
 	async function logIn() {
+		let authenticated = false;
 		if ($("#user-name-login").val().trim() == "") {
 			swal.fire({ title: "UserName", text: "Please enter your user name .. it can't be empty!", "icon": "info" });
 		}
@@ -756,6 +760,7 @@
 							document.getElementById("user-name-login").value = "";
 							document.getElementById("password-login").value = "";
 							localStorage["access-token"] = data;
+							authenticated = true;
 						}
 						else {
 							data = await data.json();
@@ -766,5 +771,6 @@
 				failureAlert("something went wrong with your request .. check your data and try again");
 			}
 		}
+		return authenticated;
 	}
 </script>
