@@ -56,8 +56,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
     };
 });
 builder.Services.AddAuthorization();
-builder.Services.AddScoped<IUserInterface, UserService>();
-builder.Services.AddHttpContextAccessor();
+//builder.Services.AddScoped<IUserInterface, UserService>();
+//builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 app.UseSwagger();
@@ -71,7 +71,8 @@ app.UseCors(x => x
     .AllowAnyMethod()
     .AllowAnyHeader()
     .SetIsOriginAllowed(origin => true) // allow any origin
-    .AllowCredentials()); // allow credentialsapp.UseAuthentication();
+    .AllowCredentials()); // allow credentials
+app.UseAuthentication();
 app.UseAuthorization();
 Data data = new Data(app);
 Pages pages = new Pages(data);
@@ -221,25 +222,42 @@ public class Data
             .Build();
         this.configuration = config;
     }
-    public Category AddCategory(Category to_add)
+    public IResult AddCategory(Category to_add)
     {
         to_add.ID = Guid.NewGuid();
         this.Categories.Add(to_add);
         this.CategoriesMap[to_add.Name] = to_add.ID;
         this.CategoriesNamesMap[to_add.ID] = to_add.Name;
         this.WriteInFolder(JsonSerializer.Serialize(this.Categories, this.Options), this.CategoriesLoc);
-        return to_add;
+        return Results.Json(to_add);
     }
-    public Category EditCategory(Guid id, Category newCategory)
+    public IResult EditCategory(Guid id, Category newCategory)
     {
-        Category toEdit = this.Categories.Single(x => x.ID == id);
+        Category toEdit;
+        try
+        {
+            toEdit = this.Categories.Single(x => x.ID == id);
+        }
+        catch
+        {
+            return Results.NotFound("No category exists with that id");
+        }
         toEdit.Name = newCategory.Name;
         this.WriteInFolder(JsonSerializer.Serialize(this.Categories, this.Options), this.CategoriesLoc);
-        return toEdit;
+        return Results.Json(toEdit);
+
     }
-    public Category DeleteCategory(Guid id)
+    public IResult DeleteCategory(Guid id)
     {
-        Category toDelete = this.Categories.Single(x => x.ID == id);
+        Category toDelete;
+        try
+        {
+            toDelete = this.Categories.Single(x => x.ID == id);
+        }
+        catch
+        {
+            return Results.NotFound("No category exists with that id");
+        }
         this.Categories.Remove(toDelete);
         foreach (Recipe recipe in this.Recipes)
         {
@@ -255,24 +273,42 @@ public class Data
         }
         this.WriteInFolder(JsonSerializer.Serialize(this.Categories, this.Options), this.CategoriesLoc);
         this.WriteInFolder(JsonSerializer.Serialize(this.Recipes, this.Options), this.RecipesLoc);
-        return toDelete;
+        return Results.Json(toDelete);
     }
-    public Recipe EditRecipe(Guid id, Recipe newRecipe)
+    public IResult EditRecipe(Guid id, Recipe newRecipe)
     {
-        Recipe toEdit = this.Recipes.Single(x => x.ID == id);
+        Recipe toEdit;
+        try
+        {
+            toEdit = this.Recipes.Single(x => x.ID == id);
+        }
+        catch
+        {
+            return Results.NotFound("No Recipe exists with that id");
+
+        }
         toEdit.Title = newRecipe.Title;
         toEdit.Instructions = newRecipe.Instructions;
         toEdit.Ingredients = newRecipe.Ingredients;
         toEdit.Categories = newRecipe.Categories;
         this.WriteInFolder(JsonSerializer.Serialize(this.Recipes, this.Options), this.RecipesLoc);
-        return toEdit;
+        return Results.Json(toEdit);
     }
-    public Recipe DeleteRecipe(Guid id)
+    public IResult DeleteRecipe(Guid id)
     {
-        Recipe toDelete = this.Recipes.Single(x => x.ID == id);
+
+        Recipe toDelete;
+        try
+        {
+            toDelete = this.Recipes.Single(x => x.ID == id);
+        }
+        catch
+        {
+            return Results.NotFound("No Recipe exists with that id");
+        }
         this.Recipes.Remove(toDelete);
         this.WriteInFolder(JsonSerializer.Serialize(this.Recipes, this.Options), this.RecipesLoc);
-        return toDelete;
+        return Results.Json(toDelete);
     }
     public void AddRecipe(Recipe to_add)
     {
@@ -342,12 +378,11 @@ public class Pages
         switch (action)
         {
             case "add":
-                Category added = this.Data.AddCategory(c);
-                return Results.Json(new { c.Name, added.ID });
+                return Data.AddCategory(c);
+
 
             case "edit":
-                Category toEdit = Data.EditCategory(id, c);
-                return Results.Json(toEdit);
+                return Data.EditCategory(id, c);
         }
         // should not be called 
         return Results.Ok();
@@ -409,14 +444,13 @@ public class Pages
                 return Results.Json(new { r.Title, r.Ingredients, r.Instructions, r.Categories, r.ID });
 
             case "edit":
-                Recipe toEdit = Data.EditRecipe(id, r);
-                return Results.Json(toEdit);
+                return Data.EditRecipe(id, r);
         }
         // should not be called 
         return Results.Ok();
 
     }
-    [Authorize]
+    [HttpPost, Authorize]
     public IResult CreateCategory([FromBody] Category c)
     {
         return CheckCategory(c, "add");
@@ -429,9 +463,7 @@ public class Pages
     [Authorize]
     public IResult DeleteCategory(Guid id)
     {
-        Category toDelete = Data.DeleteCategory(id);
-
-        return Results.Json(toDelete);
+        return Data.DeleteCategory(id);
     }
 
     //[HttpPost,Authorize] 
@@ -448,8 +480,7 @@ public class Pages
     [HttpDelete, Authorize]
     public IResult DeleteRecipe(Guid id)
     {
-        Recipe toDelete = Data.DeleteRecipe(id);
-        return Results.Json(toDelete);
+        return Data.DeleteRecipe(id);
     }
     public IResult RegisterUser([FromBody] UserDTO u, HttpContext httpContext)
     {
@@ -471,7 +502,7 @@ public class Pages
         response.Cookies.Append("refreshToken", refreshToken.Token, cookie);
         return Results.Json(token);
     }
-    public async Task<IResult> RefreshToken(HttpRequest httpRequest,HttpResponse httpResponse)
+    public async Task<IResult> RefreshToken(HttpRequest httpRequest, HttpResponse httpResponse)
     {
         var refreshToken = httpRequest.Cookies["refreshToken"];
         if (refreshToken == null)
@@ -491,7 +522,7 @@ public class Pages
     }
     public void CategoryPages(IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapGet("/categories",() => Results.Json(Data.Categories));
+        endpoints.MapGet("/categories", () => Results.Json(Data.Categories));
         endpoints.MapPost("/categories", CreateCategory);
         endpoints.MapPut("/categories/{id}", EditCategory);
         endpoints.MapDelete("/categories/{id}", DeleteCategory);
