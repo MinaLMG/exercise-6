@@ -756,7 +756,7 @@
 					.then(async (data) => {
 						if (data.status == 200) {
 							data = await data.json();
-							successAlert("successfull login")
+                            successAlert("successfull login");
 							document.getElementById("user-name-login").value = "";
 							document.getElementById("password-login").value = "";
 							localStorage["access-token"] = data;

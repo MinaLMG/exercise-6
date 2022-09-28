@@ -23,7 +23,7 @@ builder.Services.AddCors(options =>
                                "https://localhost:5113/",
                                "https://minalmg-2.azurewebsites.net").AllowAnyHeader()
                                                 .AllowAnyMethod()
-                                                .AllowAnyOrigin(); ;
+                                                ;
         });
 });
 builder.Services.AddEndpointsApiExplorer();
@@ -159,7 +159,6 @@ public class Data
         {
             return null;
         }
-
     }
     public CookieOptions SetRefreshToken(RefreshToken refreshToken)
     {
@@ -167,6 +166,8 @@ public class Data
         {
             HttpOnly = true,
             Expires = DateTime.Now.AddDays(7),
+            Secure = true,
+            SameSite=SameSiteMode.None,
         };
         return cookie;
     }
@@ -362,6 +363,24 @@ public class Data
             return null;
         }
     }
+    public IResult LogoutUser(string refreshToken )
+    {
+
+        User user;
+        try
+        { 
+            user= Users.Single(u => u.RefreshToken == refreshToken);
+            user.RefreshToken = "";
+            user.TokenCreatedAt = DateTime.Now;
+            user.TokenExpiresAt = DateTime.Now;
+            this.WriteInFolder(JsonSerializer.Serialize(this.Users, this.Options), this.UsersLoc);
+            return Results.Ok("logged out successfully");
+        }
+        catch
+        {
+            return Results.NotFound("no user with this refresh token exists");
+        }
+    }
 
 }
 public class Pages
@@ -502,6 +521,11 @@ public class Pages
         response.Cookies.Append("refreshToken", refreshToken.Token, cookie);
         return Results.Json(token);
     }
+    public IResult LogoutUser([FromBody] UserDTO u, HttpResponse response,HttpRequest httpRequest)
+    {
+        var refreshToken = httpRequest.Cookies["refreshToken"];
+        return Data.LogoutUser(refreshToken);
+    }
     public async Task<IResult> RefreshToken(HttpRequest httpRequest, HttpResponse httpResponse)
     {
         var refreshToken = httpRequest.Cookies["refreshToken"];
@@ -540,6 +564,7 @@ public class Pages
     {
         endpoints.MapPost("/register", RegisterUser);
         endpoints.MapPost("/login", LoginUser);
+        endpoints.MapPost("/logout", LogoutUser);
         endpoints.MapPost("/refresh-token", RefreshToken);
     }
 

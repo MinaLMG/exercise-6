@@ -549,3 +549,6 @@ btn-check:active + .btn-outline-custom {
             display: flex;
             justify-content: space-around;
         }
+.logout{
+    width:15px;
+}

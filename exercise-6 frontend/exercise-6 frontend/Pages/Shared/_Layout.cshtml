@@ -37,11 +37,14 @@
 					</button>
 					<div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
 						<ul class="navbar-nav flex-grow-1">
-							<li class="nav-item">
-								<a class="nav-link @((ViewData["active"]=="Categories")?"active":"")" @@click="page=`categories`" href="#">Categories</a>
+							<li class="nav-item" x-show="authenticated">
+								<a class="nav-link" x-bind:class="{active:page==`categories`}" x-on:click="page=`categories`" href="#">Categories</a>
 							</li>
-							<li class="nav-item">
-								<a class="nav-link @((ViewData["active"]=="Recipes")?"active":"")" @@click="page=`recipes`" href="#">Recipes</a>
+							<li class="nav-item" x-show="authenticated">
+								<a class="nav-link " x-bind:class="{active:page==`recipes`}"  x-on:click="page=`recipes`" href="#">Recipes</a>
+							</li>
+							<li class="nav-item" x-show="authenticated">
+								<a class="nav-link " @@click="authenticated= await logOut()" href="#">Log out <img src="~/Images/logout.png" class="logout" /></a>
 							</li>
 						</ul>
 					</div>
@@ -111,14 +114,14 @@
 		}
 		async function checkRefreshToken() {
 			//let refresh = getCookie("refreshToken");
-            let checked = false;
+			let checked = false;
 			try {
 				await postData('@(Model.Configuration["BaseUrl"] + "refresh-token")')
 					.then(async (data) => {
 						if (data.status == 200) {
 							data = await data.json();
 							localStorage["access-token"] = data;
-							checked=true;
+							checked = true;
 						}
 						else {
 							data = await data.json();
@@ -129,6 +132,28 @@
 			}
 			return checked;
 		}
+		async function logOut() {
+			let authenticated = true;
+			try {
+				await postData('@(Model.Configuration["BaseUrl"] + "logout")')
+					.then(async (data) => {
+						if (data.status == 200) {
+							data = await data.json();
+							localStorage["access-token"] = "";
+							authenticated = false;
+                            successAlert("successfull logout");
+						}
+						else {
+							data = await data.json();
+							failureAlert(data);
+						}
+					})
+			} catch (err) {
+				failureAlert("something went wrong with your request ..wait some seconds and try again");
+			}
+			return authenticated;
+		}
+
 	</script>
 
 </body>
